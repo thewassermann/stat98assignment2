@@ -183,3 +183,68 @@ for (i in 1:length(func.vect)){
   # print to csv
   save.table(sim.res, fname)
 }
+
+# baseline 
+error.norm.baseline <- function(x) return(Curry(rnorm, n=1)())
+baseline.sim.res <- total.func(N.SIMS, N, c(0,2), x.gen, error.norm.baseline, 0.95)
+save.table(baseline.sim.res, 'sim_5.csv')
+
+##############################
+# Fit and Residuals Examples #
+##############################
+
+# single iterations
+
+plot.iter <- function(d, lp, title){
+  # A function to show an example fit of a single iteration 
+  # of the simlation visually to help understand the results
+  # d: output of a call to sim.func with certain parameters
+  # lp : line params
+  fit <- lm(d$y ~ d$x)
+  
+  # raw data fit
+  plot(d$x, d$y,
+       main=paste('Regression Fit', title),
+       xlab='X',
+       ylab='Y')
+  abline(lp[1], lp[2], col='red')
+  
+  # residuals
+  plot(d$x, fit$residuals,
+       main='Residual Plot',
+       xlab='X',
+       ylab='Residuals')
+}
+
+title.vect <- c('Baseline',
+                'Normal 1',
+                'Normal 2',
+                'Normal 3',
+                'Unif 1')
+
+plot.iter.all <- function(func.vect, title.vect, lp){
+  
+  n <- length(func.vect)
+  # loop through
+  for (i in 1:n){
+    d <- sim.func(100, x.gen, func.vect[[i]], lp)
+    fname <- paste('../plot_sim_', i, sep='')
+    fname <- paste(fname, '.pdf', sep='')
+    pdf(fname, width=8, height=5)
+    par(mfrow=c(1, 2))
+    plot.iter(d, lp, title.vect[i])
+    dev.off()
+  }
+}
+
+plot.iter.all(c(error.norm.baseline, func.vect), title.vect, lp)
+
+## rader sim, for appendix
+lp <- c(0,2)
+x.gen <- Curry(runif)
+error.beta.rader <- function(x) return(Curry(rbeta, n=1, 2+x,3-x)())
+d <- sim.func(100, x.gen, error.beta.rader, lp)
+pdf('../curio.pdf', width=8, height=5)
+plot.iter(d, lp, 'Curiosity')
+dev.off()
+
